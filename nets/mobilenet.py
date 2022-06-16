@@ -1,24 +1,40 @@
+#---------------------------------------------------#
+#   MobileNetV1
+#---------------------------------------------------#
+
 import torch.nn as nn
 
-
+#---------------------------------------------------#
+#   Conv+BN+ReLU6
+#---------------------------------------------------#
 def conv_bn(inp, oup, stride = 1):
     return nn.Sequential(
         nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
         nn.BatchNorm2d(oup),
         nn.ReLU6()
     )
-    
+
+#---------------------------------------------------#
+#   dw+pw
+#   3x3DWConv + 1x1Conv
+#---------------------------------------------------#
 def conv_dw(inp, oup, stride = 1):
     return nn.Sequential(
+        # 3x3Conv
+        # in = put = groups
         nn.Conv2d(inp, inp, 3, stride, 1, groups=inp, bias=False),
         nn.BatchNorm2d(inp),
         nn.ReLU6(),
 
+        # 1x1Conv
         nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
         nn.BatchNorm2d(oup),
         nn.ReLU6(),
     )
 
+#---------------------------------------------------#
+#   MobileNetV1
+#---------------------------------------------------#
 class MobileNetV1(nn.Module):
     def __init__(self):
         super(MobileNetV1, self).__init__()
@@ -36,8 +52,8 @@ class MobileNetV1(nn.Module):
             conv_dw(128, 256, 2),
             conv_dw(256, 256, 1),
         )
+        # 20,20,256 -> 10,10,512
         self.stage2 = nn.Sequential(
-            # 20,20,256 -> 10,10,512
             conv_dw(256, 512, 2),
             conv_dw(512, 512, 1),
             conv_dw(512, 512, 1),
@@ -45,8 +61,9 @@ class MobileNetV1(nn.Module):
             conv_dw(512, 512, 1),
             conv_dw(512, 512, 1),
         )
+
+        # 10,10,512 -> 5,5,1024
         self.stage3 = nn.Sequential(
-            # 10,10,512 -> 5,5,1024
             conv_dw(512, 1024, 2),
             conv_dw(1024, 1024, 1),
         )
@@ -60,11 +77,10 @@ class MobileNetV1(nn.Module):
             elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-                
     def forward(self, x):
-        x = self.stage1(x)
-        x = self.stage2(x)
-        x = self.stage3(x)
+        x = self.stage1(x)  # 160,160,3 -> 20,20,256
+        x = self.stage2(x)  # 20,20,256 -> 10,10,512
+        x = self.stage3(x)  # 10,10,512 -> 5,5, 1024
         x = self.avg(x)
         # x = self.model(x)
         x = x.view(-1, 1024)

@@ -1,5 +1,9 @@
-import os
+"""
+annotation_path, backbone, pretrained, model_path
+训练前要运行txt_annotation.py生成根目录的cls_train.txt文件
+"""
 
+import os
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
@@ -14,6 +18,7 @@ from utils.callback import LossHistory
 from utils.dataloader import FacenetDataset, LFWDataset, dataset_collate
 from utils.utils import get_num_classes, show_config
 from utils.utils_fit import fit_one_epoch
+
 
 
 if __name__ == "__main__":
@@ -50,7 +55,7 @@ if __name__ == "__main__":
     #--------------------------------------------------------#
     #   输入图像大小，常用设置如[112, 112, 3]
     #--------------------------------------------------------#
-    input_shape     = [160, 160, 3]
+    input_shape     = [160,160,3]
     #--------------------------------------------------------#
     #   主干特征提取网络的选择
     #   mobilenet
@@ -60,10 +65,10 @@ if __name__ == "__main__":
     #----------------------------------------------------------------------------------------------------------------------------#
     #   权值文件的下载请看README，可以通过网盘下载。
     #   模型的 预训练权重 比较重要的部分是 主干特征提取网络的权值部分，用于进行特征提取。
-    #   
+    #
     #   如果训练过程中存在中断训练的操作，可以将model_path设置成logs文件夹下的权值文件，将已经训练了一部分的权值再次载入。
     #   同时修改下方的训练的参数，来保证模型epoch的连续性。
-    #   
+    #
     #   当model_path = ''的时候不加载整个模型的权值。
     #
     #   此处使用的是整个模型的权重，因此是在train.py进行加载的，pretrain不影响此处的权值加载。

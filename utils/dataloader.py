@@ -35,7 +35,7 @@ class FacenetDataset(Dataset):
 
     def __getitem__(self, index):
         #------------------------------------#
-        #   创建全为零的矩阵
+        #   每次载入3张图片,2张同一个人,1张不同人的(构成Triplet Loss)
         #------------------------------------#
         images = np.zeros((3, 3, self.input_shape[0], self.input_shape[1]))
         labels = np.zeros((3))
@@ -44,8 +44,10 @@ class FacenetDataset(Dataset):
         #   先获得两张同一个人的人脸
         #   用来作为anchor和positive
         #------------------------------#
+        # 随机选取一个人
         c               = random.randint(0, self.num_classes - 1)
         selected_path   = self.paths[self.labels[:] == c]
+        # 随机选这个人的两张图片
         while len(selected_path) < 2:
             c               = random.randint(0, self.num_classes - 1)
             selected_path   = self.paths[self.labels[:] == c]

@@ -36,8 +36,18 @@ def fit_one_epoch(model_train, model, loss_history, loss, optimizer, epoch, epoc
         if not fp16:
             outputs1, outputs2 = model_train(images, "train")
 
+            #----------------------------------------------------#
+            #   triplet_loss
+            #----------------------------------------------------#
             _triplet_loss   = loss(outputs1, Batch_size)
+            #----------------------------------------------------#
+            #   交叉熵损失  NLLLoss(y_true, LogSoftmax(y_predict, dim=-1)) = CrossEntropyLoss(y_true, y_predict)
+            #----------------------------------------------------#
             _CE_loss        = nn.NLLLoss()(F.log_softmax(outputs2, dim = -1), labels)
+
+            #----------------------------------------------------#
+            #   两个损失相加
+            #----------------------------------------------------#
             _loss           = _triplet_loss + _CE_loss
 
             _loss.backward()
@@ -118,7 +128,7 @@ def fit_one_epoch(model_train, model, loss_history, loss, optimizer, epoch, epoc
                 dists = torch.sqrt(torch.sum((out_a - out_p) ** 2, 1))
             distances.append(dists.data.cpu().numpy())
             labels.append(label.data.cpu().numpy())
-        
+
         labels      = np.array([sublabel for label in labels for sublabel in label])
         distances   = np.array([subdist for dist in distances for subdist in dist])
         _, _, accuracy, _, _, _, _ = evaluate(distances,labels)

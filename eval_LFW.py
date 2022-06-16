@@ -1,3 +1,14 @@
+"""
+评估模型
+backbone, model_path, lfw_dir_path, lfw_pairs_path
+
+result:
+    Accuracy: 0.98233+-0.00473
+    Best_thresholds: 1.15000
+    Validation rate: 0.82133+-0.04593 @ FAR=0.00100
+    根目录会生成一张roc图片
+"""
+
 import torch
 import torch.backends.cudnn as cudnn
 

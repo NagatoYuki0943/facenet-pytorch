@@ -1,5 +1,3 @@
-
-
 import math
 from functools import partial
 
@@ -7,21 +5,43 @@ import numpy as np
 import torch
 
 
+#--------------------------------------------------------#
+#   计算loss
+#   属于同一个人的两张图片欧式距离拉近,不同人的两张图片欧式距离拉远
+#--------------------------------------------------------#
 def triplet_loss(alpha = 0.2):
-    def _triplet_loss(y_pred,Batch_size):
+    def _triplet_loss(y_pred, Batch_size):
+        #-------------------------------------------#
+        #   anchor,positive 相同序号属于同一个人
+        #   anchor,negative 相同序号属于不同的人
+        #-------------------------------------------#
         anchor, positive, negative = y_pred[:int(Batch_size)], y_pred[int(Batch_size):int(2*Batch_size)], y_pred[int(2*Batch_size):]
 
+        #-------------------------------------------#
+        #   计算anchor和positive,negative的距离
+        #   pos_dist: 数据属于同一个人的距离
+        #   neg_dist: 数据不属于同一个人的距离
+        #-------------------------------------------#
         pos_dist = torch.sqrt(torch.sum(torch.pow(anchor - positive,2), axis=-1))
         neg_dist = torch.sqrt(torch.sum(torch.pow(anchor - negative,2), axis=-1))
-        
+
+        #-------------------------------------------#
+        #   满足条件才参与运算,相同人的图片距离近,不同人距离远才参与运算
+        #   neg_dist 太大, pos_dist 太小,这样才参与运算
+        #-------------------------------------------#
         keep_all = (neg_dist - pos_dist < alpha).cpu().numpy().flatten()
         hard_triplets = np.where(keep_all == 1)
 
         pos_dist = pos_dist[hard_triplets]
         neg_dist = neg_dist[hard_triplets]
 
+        #-------------------------------------------#
+        #   pos_dist - neg_dist 要不断减小, pos要变小, neg要增大
+        #-------------------------------------------#
         basic_loss = pos_dist - neg_dist + alpha
-        loss = torch.sum(basic_loss) / torch.max(torch.tensor(1), torch.tensor(len(hard_triplets[0])))
+
+        # 取loss平均值
+        loss = torch.sum(basic_loss)/torch.max(torch.tensor(1),torch.tensor(len(hard_triplets[0])))
         return loss
     return _triplet_loss
 
